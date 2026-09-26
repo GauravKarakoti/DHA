@@ -7,7 +7,10 @@ out-tsc
 *.tsbuildinfo
 .expo
 .expo-shared
-
+.env
+hardhat-artifacts
+hardhat-cache
+typechain-types
 # dependencies
 node_modules
 

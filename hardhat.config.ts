@@ -19,7 +19,6 @@ const config: HardhatUserConfig = {
     },
   },
   networks: {
-    hardhat: {},
     ...(sepoliaRpcUrl && privateKey
       ? {
           sepolia: {

@@ -1,4 +1,5 @@
 import { encodeFunctionData, keccak256, stringToBytes } from 'viem';
+import DHAConfig from '../../DHAConfig.json'; 
 
 export type EthereumProvider = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
@@ -23,22 +24,6 @@ export type RegistryRead = {
   error?: string;
 };
 
-const DHA_ABI = [
-  {
-    type: 'function',
-    name: 'mintPlot',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'to', type: 'address' },
-      { name: 'metadataURI', type: 'string' },
-      { name: 'plotNumber', type: 'uint256' },
-      { name: 'blockName', type: 'string' },
-      { name: 'area', type: 'uint256' },
-      { name: 'location', type: 'string' },
-    ],
-    outputs: [{ name: 'tokenId', type: 'uint256' }],
-  },
-] as const;
 const PLOT_MINTED_TOPIC = keccak256(stringToBytes('PlotMinted(uint256,address,uint256)'));
 
 export type TransactionReceipt = {
@@ -51,7 +36,7 @@ declare global {
 }
 
 export const SEPOLIA_CHAIN_ID = import.meta.env.VITE_SEPOLIA_CHAIN_ID || '0xaa36a7';
-export const CONTRACT_ADDRESS = import.meta.env.VITE_DHA_CONTRACT_ADDRESS || '';
+export const CONTRACT_ADDRESS = DHAConfig.address;
 const explorerBase = 'https://sepolia.etherscan.io';
 
 export const explorerAddress = (address: string) => `${explorerBase}/address/${address}`;
@@ -163,11 +148,13 @@ export async function mintPlot(
   location: string,
 ) {
   if (!CONTRACT_ADDRESS) throw new Error('The DHA contract address is not configured.');
+  
   const data = encodeFunctionData({
-    abi: DHA_ABI,
+    abi: DHAConfig.abi as any, // Cast as any because dynamic JSON imports cannot be typed strictly 'as const' by Viem natively
     functionName: 'mintPlot',
     args: [from as `0x${string}`, uri, BigInt(plotNumber), blockName, BigInt(area), location],
   });
+  
   return rpc('eth_sendTransaction', [{ from, to: CONTRACT_ADDRESS, data }]) as Promise<string>;
 }
 
