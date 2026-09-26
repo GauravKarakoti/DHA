@@ -1,0 +1,1 @@
+- [Hardhat workspace quirks](hardhat-workspace-quirks.md) — isolate compiler output from Replit artifact folders and align OpenZeppelin with Cancun-era Solidity.

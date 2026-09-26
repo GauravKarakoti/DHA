@@ -1,0 +1,1352 @@
+# DHA — Web3 Plot NFT Marketplace
+
+Build a complete Phase 1 Web3 NFT marketplace application called **DHA**.
+
+DHA is a housing-society-themed Web3 learning project where users can mint digital plot NFTs. Each plot is represented by an ERC-721 NFT containing metadata such as plot number, block, area, and location.
+
+This is a **learning project**. The NFTs represent digital/virtual plots and must NOT be presented as legally representing ownership of real-world property.
+
+The goal of Phase 1 is:
+
+> Connect wallet → Mint a Plot NFT → Store metadata → Deploy ERC-721 contract → Display NFTs in a polished marketplace-style UI → View NFT details.
+
+Do NOT implement auctions or marketplace buying/selling yet. The architecture should make it easy to add those features later.
+
+---
+
+# 1. Technology Stack
+
+Use the following stack:
+
+## Frontend
+
+* Next.js latest stable version, preferably Next.js 16+
+* TypeScript
+* React
+* Tailwind CSS
+* Modern responsive UI
+* Use App Router
+* Use clean reusable components
+* Use Lucide icons or another lightweight icon library
+* Avoid unnecessary UI libraries unless needed
+
+## Web3
+
+* Solidity
+* ERC-721
+* OpenZeppelin Contracts
+* Hardhat
+* ethers.js OR viem/wagmi
+* MetaMask/browser wallet
+* Ethereum Sepolia testnet
+
+## Development
+
+The project must work inside Replit.
+
+Use environment variables for:
+
+```text
+SEPOLIA_RPC_URL=
+PRIVATE_KEY=
+NEXT_PUBLIC_CONTRACT_ADDRESS=
+NEXT_PUBLIC_CHAIN_ID=
+```
+
+Never hardcode private keys or RPC credentials.
+
+---
+
+# 2. Project Architecture
+
+Use a clean structure similar to:
+
+```text
+dha/
+│
+├── app/
+│   ├── page.tsx
+│   ├── explore/
+│   │   └── page.tsx
+│   ├── mint/
+│   │   └── page.tsx
+│   ├── nft/
+│   │   └── [tokenId]/
+│   │       └── page.tsx
+│   └── profile/
+│       └── page.tsx
+│
+├── components/
+│   ├── Navbar.tsx
+│   ├── WalletButton.tsx
+│   ├── NFTCard.tsx
+│   ├── NFTGrid.tsx
+│   ├── MintForm.tsx
+│   ├── NFTDetails.tsx
+│   ├── EmptyState.tsx
+│   └── Footer.tsx
+│
+├── contracts/
+│   └── DHAPlotNFT.sol
+│
+├── scripts/
+│   └── deploy.ts
+│
+├── test/
+│   └── DHAPlotNFT.ts
+│
+├── lib/
+│   ├── contract.ts
+│   ├── wagmi.ts
+│   └── nft.ts
+│
+├── public/
+│   └── ...
+│
+├── artifacts/
+│   └── ...
+│
+├── hardhat.config.ts
+├── package.json
+├── tsconfig.json
+├── .env.example
+└── README.md
+```
+
+Adjust the structure if necessary, but keep frontend, contracts, deployment scripts, and Web3 utilities clearly separated.
+
+---
+
+# 3. Brand / UI Direction
+
+Create a **premium modern Web3 real-estate aesthetic**.
+
+The application should feel like a combination of:
+
+* premium real-estate platform
+* modern NFT marketplace
+* high-end Web3 dashboard
+
+Do NOT make it look like a generic crypto template.
+
+The brand is:
+
+**DHA**
+
+Use a sophisticated visual identity.
+
+Suggested design direction:
+
+* Minimal
+* Premium
+* Spacious
+* Strong typography
+* Large property/NFT imagery
+* Rounded cards
+* Subtle borders
+* Soft shadows
+* Elegant animations
+* Excellent dark/light contrast
+* Responsive on desktop, tablet, and mobile
+
+Use a neutral palette with:
+
+* white / off-white
+* charcoal / black
+* muted gray
+* one premium accent color
+
+Do not overuse gradients.
+
+Use subtle animations with CSS or Framer Motion where appropriate.
+
+---
+
+# 4. Navbar
+
+Create a polished navbar.
+
+Left:
+
+```text
+DHA
+Digital Housing Assets
+```
+
+Navigation:
+
+```text
+Explore
+Mint
+My Plots
+```
+
+Right:
+
+```text
+Connect Wallet
+```
+
+When connected, show a shortened wallet address:
+
+```text
+0x82F...91A
+```
+
+Clicking the wallet button should allow connecting/disconnecting the wallet.
+
+Show the current network.
+
+If the user is on the wrong network, clearly show:
+
+```text
+Wrong Network
+Switch to Sepolia
+```
+
+Do not silently assume the network.
+
+---
+
+# 5. Homepage
+
+Create a premium landing page.
+
+Hero section:
+
+```text
+Own Your Digital Plot
+
+Discover, mint and collect unique DHA plot NFTs.
+
+Each plot is represented as a unique ERC-721 digital asset
+with verifiable ownership on the blockchain.
+
+[Explore Plots] [Mint a Plot]
+```
+
+Include a large visual representation of digital plots.
+
+Do NOT use copyrighted brand assets.
+
+You can create an abstract property/grid/isometric illustration using CSS, gradients, or generated placeholder imagery.
+
+Add a statistics section:
+
+```text
+Total Plots
+Minted
+My Plots
+Network
+```
+
+The values should come from the blockchain where practical.
+
+Add a "Featured Plots" section showing NFTs.
+
+Add a simple "How it works" section:
+
+```text
+01 Connect Wallet
+02 Choose a Plot
+03 Mint NFT
+04 Own It On-Chain
+```
+
+---
+
+# 6. Explore / Marketplace Page
+
+Create:
+
+```text
+/explore
+```
+
+This is the main NFT marketplace-style gallery.
+
+Heading:
+
+```text
+Explore Plots
+```
+
+Subtitle:
+
+```text
+Discover digital plots minted on the DHA network.
+```
+
+Create a responsive NFT grid.
+
+Desktop:
+
+```text
+4 cards per row
+```
+
+Tablet:
+
+```text
+2–3 cards
+```
+
+Mobile:
+
+```text
+1 card
+```
+
+Each NFT card should contain:
+
+* Plot image
+* Plot name
+* Token ID
+* Block
+* Area
+* Location
+* Owner shortened address
+* Status
+
+For Phase 1 the status can simply be:
+
+```text
+Owned
+```
+
+Do NOT show fake prices because buying/selling is not implemented yet.
+
+Instead, optionally show:
+
+```text
+Not Listed
+```
+
+or:
+
+```text
+Minted
+```
+
+Each card should have:
+
+```text
+View Plot
+```
+
+which navigates to:
+
+```text
+/nft/[tokenId]
+```
+
+---
+
+# 7. NFT Card
+
+Design a high-quality NFT/property card.
+
+Example:
+
+```text
+┌─────────────────────────────┐
+│                             │
+│        PLOT IMAGE           │
+│                             │
+├─────────────────────────────┤
+│ DHA Plot #001               │
+│                             │
+│ Block A       250 sq yd     │
+│                             │
+│ DHA Digital Estate          │
+│                             │
+│ Owned by                    │
+│ 0x82F...91A                 │
+│                             │
+│       [ View Plot ]         │
+└─────────────────────────────┘
+```
+
+Use hover animations.
+
+---
+
+# 8. Mint Page
+
+Create:
+
+```text
+/mint
+```
+
+Heading:
+
+```text
+Mint Your Plot
+```
+
+Create a clean minting form.
+
+Fields:
+
+```text
+Plot Number
+Block
+Area
+Location
+Description
+Image URL
+```
+
+For Phase 1, allow the user to provide an image URL.
+
+Do not build image upload infrastructure yet.
+
+Example:
+
+```text
+Plot Number:
+001
+
+Block:
+A
+
+Area:
+250
+
+Unit:
+sq yd
+
+Location:
+DHA Digital Estate
+
+Description:
+A premium digital plot inside DHA.
+
+Image URL:
+https://...
+```
+
+Add:
+
+```text
+Preview
+```
+
+which displays the NFT before minting.
+
+Then:
+
+```text
+[ Mint Plot NFT ]
+```
+
+---
+
+# 9. Minting Flow
+
+The minting process must be a real blockchain transaction.
+
+Flow:
+
+```text
+User fills form
+        ↓
+Validate fields
+        ↓
+Create metadata
+        ↓
+Store metadata
+        ↓
+Call smart contract
+        ↓
+Wallet confirmation
+        ↓
+Transaction pending
+        ↓
+Transaction confirmed
+        ↓
+Show Token ID
+        ↓
+Show NFT
+```
+
+Handle all states:
+
+```text
+Idle
+Connecting wallet
+Preparing transaction
+Waiting for wallet
+Transaction pending
+Transaction confirmed
+Transaction failed
+```
+
+Show useful transaction information.
+
+After successful minting:
+
+```text
+NFT Minted Successfully
+
+Token ID: #001
+
+Transaction:
+0x....
+
+[View NFT]
+[View Transaction]
+```
+
+Use the Sepolia block explorer link dynamically.
+
+---
+
+# 10. Metadata
+
+NFT metadata should follow the standard ERC-721 metadata format.
+
+Example:
+
+```json
+{
+  "name": "DHA Plot #001",
+  "description": "A digital plot NFT from the DHA ecosystem.",
+  "image": "IMAGE_URL",
+  "attributes": [
+    {
+      "trait_type": "Plot Number",
+      "value": "001"
+    },
+    {
+      "trait_type": "Block",
+      "value": "A"
+    },
+    {
+      "trait_type": "Area",
+      "value": "250 sq yd"
+    },
+    {
+      "trait_type": "Location",
+      "value": "DHA Digital Estate"
+    }
+  ]
+}
+```
+
+For Phase 1, metadata may be stored using a simple approach suitable for development/testing.
+
+Prefer IPFS-compatible metadata architecture.
+
+If using a centralized metadata endpoint initially, structure the code so it can easily be replaced with IPFS later.
+
+Do NOT put mutable marketplace state inside the metadata.
+
+---
+
+# 11. Solidity Contract
+
+Create:
+
+```text
+contracts/DHAPlotNFT.sol
+```
+
+Implement a proper ERC-721 contract using OpenZeppelin.
+
+The contract should:
+
+* inherit ERC721
+* use Ownable where appropriate
+* maintain an incremental token ID
+* support minting
+* support tokenURI
+* emit useful events
+* prevent invalid minting
+* expose useful read functions
+
+Suggested concept:
+
+```solidity
+contract DHAPlotNFT is ERC721, Ownable {
+    uint256 private _nextTokenId;
+
+    struct Plot {
+        uint256 plotNumber;
+        string blockName;
+        uint256 area;
+        string location;
+        string metadataURI;
+    }
+
+    mapping(uint256 => Plot) public plots;
+
+    ...
+}
+```
+
+But design the contract properly rather than blindly copying this structure.
+
+---
+
+# 12. Mint Function
+
+Implement a function similar to:
+
+```solidity
+function mintPlot(
+    address to,
+    string memory tokenURI,
+    uint256 plotNumber,
+    string memory blockName,
+    uint256 area,
+    string memory location
+) external returns (uint256)
+```
+
+The exact signature can be improved if needed.
+
+Requirements:
+
+* Token IDs should increment automatically.
+* Each token must have unique ownership.
+* Metadata URI must be associated with the token.
+* Plot information should be stored on-chain where appropriate.
+* Emit an event such as:
+
+```solidity
+event PlotMinted(
+    uint256 indexed tokenId,
+    address indexed owner,
+    uint256 plotNumber
+);
+```
+
+Make the contract easy to extend later.
+
+---
+
+# 13. Important Minting Design
+
+Because this is a learning project, allow users to mint their own plot NFTs.
+
+However, prevent accidental duplicate plot numbers if possible.
+
+Implement a mapping:
+
+```solidity
+mapping(uint256 => bool) public plotNumberExists;
+```
+
+Before minting:
+
+```text
+if plot number already exists
+    revert
+```
+
+This means Plot #001 cannot be minted twice.
+
+Keep this logic separate from future marketplace logic.
+
+---
+
+# 14. Contract Tests
+
+Write Hardhat tests.
+
+At minimum test:
+
+### Deployment
+
+* Contract deploys successfully
+* Name is correct
+* Symbol is correct
+
+### Minting
+
+* User can mint
+* Token ID increments
+* Owner is correct
+* Token URI is correct
+* Plot metadata is stored
+* PlotMinted event is emitted
+
+### Validation
+
+* Duplicate plot number fails
+* Invalid address fails
+* Invalid metadata URI fails if validation is implemented
+
+### Ownership
+
+Test:
+
+```text
+ownerOf(tokenId)
+```
+
+and:
+
+```text
+tokenURI(tokenId)
+```
+
+Make sure tests pass before considering Phase 1 complete.
+
+---
+
+# 15. Hardhat Deployment
+
+Create:
+
+```text
+scripts/deploy.ts
+```
+
+Deploy the NFT contract to:
+
+```text
+Ethereum Sepolia
+```
+
+The deployment script should print:
+
+```text
+DHAPlotNFT deployed to:
+0x...
+```
+
+Also print the network.
+
+Use environment variables.
+
+Never commit:
+
+```text
+.env
+```
+
+to Git.
+
+Create:
+
+```text
+.env.example
+```
+
+with:
+
+```text
+SEPOLIA_RPC_URL=
+PRIVATE_KEY=
+NEXT_PUBLIC_CONTRACT_ADDRESS=
+NEXT_PUBLIC_CHAIN_ID=11155111
+```
+
+---
+
+# 16. Frontend Web3 Integration
+
+Use wagmi + viem or another modern Web3 stack.
+
+The frontend should be able to:
+
+### Read
+
+```text
+total minted NFTs
+ownerOf(tokenId)
+tokenURI(tokenId)
+plot metadata
+```
+
+### Write
+
+```text
+mintPlot()
+```
+
+Use the deployed contract ABI.
+
+Do not fake blockchain data.
+
+The NFT cards on the Explore page should use actual contract data.
+
+---
+
+# 17. NFT Gallery Data
+
+For the first version, it is acceptable to determine the token IDs from:
+
+```text
+1 → latest token
+```
+
+or by reading the contract's minting state.
+
+However, structure the code so we can later replace this with an event indexer.
+
+Eventually we will want:
+
+```text
+PlotMinted events
+       ↓
+Indexer
+       ↓
+Database/API
+       ↓
+Next.js
+```
+
+Do NOT build the indexer in Phase 1.
+
+---
+
+# 18. NFT Detail Page
+
+Create:
+
+```text
+/nft/[tokenId]
+```
+
+Display:
+
+```text
+Large NFT image
+
+DHA Plot #001
+
+Token ID
+Owner
+Plot Number
+Block
+Area
+Location
+Description
+
+Contract Address
+
+Transaction information
+```
+
+Include buttons:
+
+```text
+View on Explorer
+```
+
+and:
+
+```text
+Back to Explore
+```
+
+Do not include Buy or Auction buttons yet.
+
+Instead, show:
+
+```text
+Marketplace
+Coming Soon
+```
+
+---
+
+# 19. My Plots
+
+Create:
+
+```text
+/profile
+```
+
+After wallet connection, show NFTs owned by the connected wallet.
+
+Example:
+
+```text
+My DHA Plots
+
+3 Plots Owned
+
+[NFT] [NFT] [NFT]
+```
+
+If there are no NFTs:
+
+```text
+You don't own any DHA plots yet.
+
+[Mint Your First Plot]
+```
+
+---
+
+# 20. Loading / Error States
+
+The UI must handle:
+
+* Wallet not installed
+* Wallet disconnected
+* Wrong network
+* RPC failure
+* Contract unavailable
+* Transaction rejected
+* Transaction reverted
+* Metadata unavailable
+* NFT does not exist
+* Loading blockchain data
+
+Use attractive skeleton loaders rather than blank screens.
+
+Never leave the UI frozen during a transaction.
+
+---
+
+# 21. Security
+
+Follow basic Web3 security practices.
+
+Do NOT:
+
+* hardcode private keys
+* expose RPC secrets
+* trust frontend-only ownership checks
+* use `tx.origin`
+* use unsafe external calls unnecessarily
+* implement custom ERC721 logic when OpenZeppelin already provides it
+* use `unchecked` arithmetic unless justified
+
+Use OpenZeppelin's audited ERC-721 implementation.
+
+Use Solidity compiler version compatible with the installed OpenZeppelin version.
+
+---
+
+# 22. Marketplace Future Architecture
+
+Do NOT implement this yet.
+
+But design the code so Phase 2 can introduce:
+
+```text
+DHAPlotNFT
+       │
+       ▼
+DHAMarketplace
+       │
+       ├── listNFT()
+       ├── cancelListing()
+       └── buyNFT()
+```
+
+And Phase 3:
+
+```text
+DHAAuction
+       │
+       ├── createAuction()
+       ├── placeBid()
+       ├── withdrawBid()
+       └── endAuction()
+```
+
+Do not mix marketplace functionality into the NFT contract.
+
+---
+
+# 23. Future UI Preparation
+
+The Explore page should eventually support:
+
+```text
+All
+For Sale
+Auction
+Owned
+```
+
+Filters:
+
+```text
+Block
+Area
+Location
+Price
+Status
+```
+
+For Phase 1, only implement filters that have real data.
+
+Do not create fake marketplace prices.
+
+---
+
+# 24. Design Details
+
+Make the application look production-quality even though it is a learning project.
+
+Use:
+
+* consistent spacing
+* excellent typography
+* responsive design
+* accessible buttons
+* smooth hover effects
+* subtle transitions
+* skeleton loaders
+* empty states
+* toast notifications
+* modal/dialog for transaction status where useful
+
+Avoid:
+
+* excessive neon colors
+* excessive crypto imagery
+* random gradients everywhere
+* generic template-looking cards
+* fake statistics
+* fake marketplace activity
+* fake prices
+* fake users
+
+The UI should communicate trust and ownership.
+
+---
+
+# 25. Homepage Copy
+
+Use copy along these lines:
+
+Hero:
+
+```text
+Digital Plots.
+On-Chain Ownership.
+
+Discover and mint unique DHA digital plots as NFTs.
+```
+
+CTA:
+
+```text
+Explore Plots
+Mint a Plot
+```
+
+Section:
+
+```text
+A New Way to Own Digital Land
+
+Every DHA plot is represented by an ERC-721 NFT,
+giving each digital plot a unique identity and
+verifiable ownership on the blockchain.
+```
+
+How it works:
+
+```text
+Connect
+Connect your Web3 wallet.
+
+Choose
+Create your DHA digital plot.
+
+Mint
+Mint it as an ERC-721 NFT.
+
+Own
+Your ownership is recorded on-chain.
+```
+
+Again, make it clear in the UI that this is a **digital/learning representation**, not legal real-estate ownership.
+
+---
+
+# 26. README
+
+Create a comprehensive README explaining:
+
+```text
+# DHA — Digital Housing Assets
+
+## Overview
+
+## Features
+
+## Tech Stack
+
+## Project Structure
+
+## Smart Contract
+
+## Local Development
+
+## Environment Variables
+
+## Hardhat Commands
+
+## Testing
+
+## Deployment
+
+## Sepolia Deployment
+
+## Frontend Setup
+
+## Web3 Architecture
+
+## Future Roadmap
+```
+
+Include commands such as:
+
+```bash
+npm install
+
+npx hardhat compile
+
+npx hardhat test
+
+npx hardhat node
+
+npx hardhat run scripts/deploy.ts --network sepolia
+
+npm run dev
+```
+
+Adjust commands according to the actual project setup.
+
+---
+
+# 27. Package Scripts
+
+Configure useful scripts:
+
+```json
+{
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "contract:compile": "hardhat compile",
+    "contract:test": "hardhat test",
+    "contract:deploy": "hardhat run scripts/deploy.ts --network sepolia"
+  }
+}
+```
+
+---
+
+# 28. Important Replit Instructions
+
+You are working inside Replit.
+
+Before writing code:
+
+1. Inspect the existing repository.
+2. Determine whether a Next.js project already exists.
+3. Reuse existing working configuration where appropriate.
+4. Do not unnecessarily recreate the project.
+5. Install only required dependencies.
+6. Make the project runnable in Replit.
+7. Create all required files.
+8. Run the contract compilation.
+9. Run the Hardhat tests.
+10. Run the Next.js build.
+11. Fix all TypeScript/build/contract errors.
+
+Do not stop after generating code.
+
+Actually validate the implementation.
+
+---
+
+# 29. Acceptance Criteria
+
+Phase 1 is complete only when ALL of the following work:
+
+### Smart Contract
+
+* [ ] ERC-721 contract compiles
+* [ ] Contract tests pass
+* [ ] Minting works
+* [ ] Token IDs increment
+* [ ] Plot numbers cannot be duplicated
+* [ ] Token URI works
+* [ ] Plot metadata is stored
+* [ ] Events are emitted
+
+### Deployment
+
+* [ ] Hardhat deployment works
+* [ ] Sepolia deployment works
+* [ ] Contract address is available through environment variables
+
+### Frontend
+
+* [ ] Next.js application builds
+* [ ] Homepage works
+* [ ] Wallet connects
+* [ ] Wrong-network state works
+* [ ] Mint page works
+* [ ] Mint transaction works
+* [ ] Transaction states are displayed
+* [ ] Explore page displays real NFTs
+* [ ] NFT detail page works
+* [ ] Profile/My Plots works
+* [ ] Blockchain explorer links work
+* [ ] Responsive mobile UI works
+
+### UX
+
+* [ ] Loading states
+* [ ] Error states
+* [ ] Empty states
+* [ ] Transaction notifications
+* [ ] No fake marketplace data
+* [ ] No fake prices
+* [ ] No fake ownership
+
+---
+
+# 30. Development Order
+
+Implement in this exact order:
+
+### Step 1
+
+Set up the Next.js application and premium DHA UI.
+
+### Step 2
+
+Set up Hardhat and Solidity.
+
+### Step 3
+
+Implement DHAPlotNFT.sol.
+
+### Step 4
+
+Write and run Hardhat tests.
+
+### Step 5
+
+Create Sepolia deployment script.
+
+### Step 6
+
+Deploy the contract.
+
+### Step 7
+
+Connect the frontend to the deployed contract.
+
+### Step 8
+
+Implement wallet connection.
+
+### Step 9
+
+Implement real NFT minting.
+
+### Step 10
+
+Implement metadata.
+
+### Step 11
+
+Implement Explore gallery.
+
+### Step 12
+
+Implement NFT detail page.
+
+### Step 13
+
+Implement My Plots.
+
+### Step 14
+
+Polish UI and responsive behavior.
+
+### Step 15
+
+Run final validation:
+
+```text
+npm run build
+npx hardhat compile
+npx hardhat test
+```
+
+Fix all errors.
+
+---
+
+# 31. Do Not Implement Yet
+
+Do NOT implement:
+
+* NFT marketplace purchases
+* NFT listings
+* auctions
+* bidding
+* royalties
+* payment processing
+* fiat payments
+* real-world property ownership
+* KYC
+* production authentication
+* admin dashboard
+* complex backend
+* indexing service
+* database
+
+These will be added in later phases.
+
+---
+
+# Final Goal
+
+When the project is finished, I should be able to open the DHA website and do this:
+
+```text
+Open DHA
+   ↓
+Connect MetaMask
+   ↓
+Switch to Sepolia if necessary
+   ↓
+Go to Mint
+   ↓
+Enter plot information
+   ↓
+Preview NFT
+   ↓
+Click "Mint Plot NFT"
+   ↓
+Confirm MetaMask transaction
+   ↓
+Wait for confirmation
+   ↓
+NFT is minted on Sepolia
+   ↓
+NFT appears in Explore
+   ↓
+Open NFT
+   ↓
+See metadata + owner + token ID
+   ↓
+Open My Plots
+   ↓
+See the NFT in my collection
+```
+
+Build this as a **real working Web3 application**, not a static mockup.
+
+Prioritize correctness of the blockchain integration while maintaining a polished, premium UI.
