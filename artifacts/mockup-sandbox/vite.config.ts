@@ -2,70 +2,39 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
-import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 import { mockupPreviewPlugin } from "./mockupPreviewPlugin";
 
-const rawPort = process.env.PORT;
-
-if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
-}
-
-const port = Number(rawPort);
-
-if (Number.isNaN(port) || port <= 0) {
-  throw new Error(`Invalid PORT value: "${rawPort}"`);
-}
-
-const basePath = process.env.BASE_PATH;
-
-if (!basePath) {
-  throw new Error(
-    "BASE_PATH environment variable is required but was not provided.",
-  );
-}
-
 export default defineConfig({
-  base: basePath,
+  // Defaults to standard '/' unless a BASE_PATH is explicitly provided by your CI/CD
+  base: process.env.BASE_PATH || "/",
+  
   plugins: [
-    mockupPreviewPlugin(),
     react(),
     tailwindcss(),
-    runtimeErrorOverlay(),
-    ...(process.env.NODE_ENV !== "production" &&
-    process.env.REPL_ID !== undefined
-      ? [
-          await import("@replit/vite-plugin-cartographer").then((m) =>
-            m.cartographer({
-              root: path.resolve(import.meta.dirname, ".."),
-            }),
-          ),
-        ]
-      : []),
+    mockupPreviewPlugin(), 
   ],
+  
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),
     },
   },
+  
   root: path.resolve(import.meta.dirname),
+  
   build: {
     outDir: path.resolve(import.meta.dirname, "dist"),
     emptyOutDir: true,
   },
+  
   server: {
-    port,
-    host: "0.0.0.0",
-    allowedHosts: true,
-    fs: {
-      strict: true,
-    },
+    // Falls back to Vite's standard port 5173 if no PORT env var is present
+    port: Number(process.env.PORT) || 5173,
+    host: true, // Resolves to "0.0.0.0" to allow network access
   },
+  
   preview: {
-    port,
-    host: "0.0.0.0",
-    allowedHosts: true,
+    port: Number(process.env.PORT) || 4173,
+    host: true,
   },
 });
