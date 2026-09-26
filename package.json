@@ -13,7 +13,8 @@
     "db:push": "pnpm --filter @workspace/db run push",
     "db:gen": "pnpm --filter @workspace/db run gen",
     "db:migrate": "pnpm --filter @workspace/db run migrate",
-    "codegen": "pnpm --filter @workspace/api-spec run codegen"
+    "codegen": "pnpm --filter @workspace/api-spec run codegen",
+    "postinstall": "pnpm run codegen"
   },
   "private": true,
   "devDependencies": {

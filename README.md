@@ -35,7 +35,7 @@ real-world property claims are intentionally out of scope.
 ## Project Structure
 
 ```text
-artifacts/dha-marketplace/  React/Vite frontend
+artifacts/frontend/         React/Vite frontend
 contracts/DHAPlotNFT.sol    ERC-721 source
 test/DHAPlotNFT.js          Hardhat contract tests
 scripts/deploy.js           Sepolia deployment script
@@ -51,11 +51,11 @@ Install dependencies with pnpm:
 pnpm install
 ```
 
-Start the frontend through the configured Replit workflow, or locally with
+Start the frontend with
 the workflow-provided `PORT` and `BASE_PATH` values:
 
 ```bash
-PORT=21248 BASE_PATH=/ pnpm --filter @workspace/dha-marketplace run dev
+PORT=21248 BASE_PATH=/ pnpm --filter @workspace/frontend run dev
 ```
 
 The app is intentionally usable in an unconfigured state. Without a deployed
@@ -131,15 +131,15 @@ event is the extension point for a future indexer/API.
 Run the frontend and contract checks:
 
 ```bash
-pnpm --filter @workspace/dha-marketplace run typecheck
-PORT=21248 BASE_PATH=/ pnpm --filter @workspace/dha-marketplace run build
+pnpm --filter @workspace/frontend run typecheck
+PORT=21248 BASE_PATH=/ pnpm --filter @workspace/frontend run build
 pnpm run contract:compile
 pnpm run contract:test
 ```
 
 ## Sepolia Deployment
 
-1. Add `SEPOLIA_RPC_URL` and `PRIVATE_KEY` through Replit Secrets or a local
+1. Add `SEPOLIA_RPC_URL` and `PRIVATE_KEY` through a local
    `.env` file.
 2. Run:
 
