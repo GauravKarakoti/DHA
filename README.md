@@ -86,7 +86,7 @@ PINATA_JWT=
 
 `PRIVATE_KEY` and `SEPOLIA_RPC_URL` are deployment-only secrets and must never
 be committed. `PINATA_JWT` is also server-only and must never be exposed as a
-`VITE_` variable. Add it through Replit Secrets. The browser frontend only
+`VITE_` variable. The browser frontend only
 needs the public contract address, chain ID, and optional public Pinata gateway.
 
 ## Hardhat Commands

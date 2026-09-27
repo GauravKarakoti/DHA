@@ -3,7 +3,7 @@ name: Pinata IPFS integration
 description: DHA uses a server-side Pinata v3 upload flow for plot images and metadata.
 ---
 
-Pinata is not available as a connected Replit integration in this workspace. Keep `PINATA_JWT` as a server-only Replit Secret, upload through the API server, and return only public `ipfs://` URIs to the browser. Pinata's public v3 files endpoint accepts multipart `file` uploads and returns `data.cid`.
+Keep `PINATA_JWT` as a server-only secret, upload through the API server, and return only public `ipfs://` URIs to the browser. Pinata's public v3 files endpoint accepts multipart `file` uploads and returns `data.cid`.
 
 **Why:** Exposing the JWT in Vite client variables would let every browser user reuse the project credential.
 
