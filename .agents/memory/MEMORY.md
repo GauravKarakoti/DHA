@@ -1,1 +1,2 @@
 - [Hardhat workspace quirks](hardhat-workspace-quirks.md) — isolate compiler output from artifact folders and align OpenZeppelin with Cancun-era Solidity.
+- [Pinata IPFS integration](pinata-ipfs.md) — keep the JWT server-side and mint only after Pinata returns image and metadata IPFS URIs.

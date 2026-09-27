@@ -42,7 +42,7 @@ const explorerBase = 'https://sepolia.etherscan.io';
 export const explorerAddress = (address: string) => `${explorerBase}/address/${address}`;
 export const explorerTx = (hash: string) => `${explorerBase}/tx/${hash}`;
 export const explorerToken = (tokenId: string) => CONTRACT_ADDRESS ? `${explorerBase}/token/${CONTRACT_ADDRESS}?a=${tokenId}` : explorerBase;
-export const mediaUri = (uri?: string) => uri?.startsWith('ipfs://') ? `https://ipfs.io/ipfs/${uri.slice(7)}` : uri;
+export const mediaUri = (uri?: string) => uri?.startsWith('ipfs://') ? `${import.meta.env.VITE_PINATA_GATEWAY || 'https://gateway.pinata.cloud/ipfs'}/${uri.slice(7)}` : uri;
 
 export const getProvider = () => window.ethereum;
 export const shortAddress = (value?: string) => value ? `${value.slice(0, 6)}…${value.slice(-4)}` : 'Not connected';
@@ -133,7 +133,7 @@ export async function resolveMetadata(uri: string): Promise<PlotMetadata> {
     const payload = uri.slice(uri.indexOf(',') + 1);
     return JSON.parse(uri.includes(';base64') ? atob(payload) : decodeURIComponent(payload)) as PlotMetadata;
   }
-  const target = uri.startsWith('ipfs://') ? `https://ipfs.io/ipfs/${uri.slice(7)}` : uri;
+  const target = uri.startsWith('ipfs://') ? `${import.meta.env.VITE_PINATA_GATEWAY || 'https://gateway.pinata.cloud/ipfs'}/${uri.slice(7)}` : uri;
   const response = await fetch(target);
   if (!response.ok) throw new Error('Metadata could not be retrieved.');
   return response.json() as Promise<PlotMetadata>;

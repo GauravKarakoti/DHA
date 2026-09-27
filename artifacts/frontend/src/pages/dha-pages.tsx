@@ -20,6 +20,7 @@ import {
   explorerToken,
   explorerTx,
   mintPlot,
+  mediaUri,
   mintedTokenId,
   readOwnedPlots,
   readPlot,
@@ -29,6 +30,7 @@ import {
   type PlotMetadata,
   type RegistryRead,
 } from '@/lib/dha-contract';
+import { uploadPlotAssets } from '@/lib/pinata';
 
 const archiveStudies = [
   { code: 'ARCHIVE / 001', title: 'The Meridian Parcel', tone: 'bg-[#d7dfca]' },
@@ -56,7 +58,7 @@ function MapTile({
         style={
           image
             ? {
-                backgroundImage: `url("${image}")`,
+                backgroundImage: `url("${mediaUri(image)}")`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
               }
@@ -332,15 +334,16 @@ export function MintPage() {
   const [location, setLocation] = useState('');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [image, setImage] = useState('');
+  const [imageFile, setImageFile] = useState<File>();
+  const [imagePreview, setImagePreview] = useState('');
   const [status, setStatus] = useState('');
   const [txHash, setTxHash] = useState('');
   const [mintedId, setMintedId] = useState('');
+  const [metadataUri, setMetadataUri] = useState('');
   const preview: PlotMetadata = useMemo(
     () => ({
       name: name || `DHA Plot #${plotNumber || '—'}`,
       description: description || 'A digital plot registered through DHA.',
-      image: image || undefined,
       attributes: [
         { trait_type: 'Plot Number', value: plotNumber || 'Not set' },
         { trait_type: 'Block', value: blockName || 'Not set' },
@@ -348,19 +351,23 @@ export function MintPage() {
         { trait_type: 'Location', value: location || 'Not set' },
       ],
     }),
-    [plotNumber, blockName, area, location, name, description, image],
+    [plotNumber, blockName, area, location, name, description],
   );
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     setStatus('');
+    setMintedId('');
+    setMetadataUri('');
     if (!address) { await connect(); return; }
     if (!isSepolia) { await switchNetwork(); return; }
     if (!plotNumber || !blockName || !area || !location || !name) { setStatus('Complete the plot number, block, area, location, and name before minting.'); return; }
     if (!/^[1-9]\d*$/.test(plotNumber) || !/^[1-9]\d*$/.test(area)) { setStatus('Plot number and area must be positive whole numbers.'); return; }
     try {
-      setStatus('Preparing transaction…');
-      const uri = `data:application/json,${encodeURIComponent(JSON.stringify(preview))}`;
-      const hash = await mintPlot(uri, address, plotNumber, blockName, area, location);
+      setStatus('Uploading metadata to IPFS…');
+      const upload = await uploadPlotAssets(preview, imageFile);
+      setMetadataUri(upload.metadataUri);
+      setStatus('Metadata saved. Preparing transaction…');
+      const hash = await mintPlot(upload.metadataUri, address, plotNumber, blockName, area, location);
       setTxHash(hash);
       setStatus('Transaction pending…');
       const receipt = await waitForTransaction(hash);
@@ -392,18 +399,19 @@ export function MintPage() {
             </div>
             <label className="mb-5 block"><span className="mb-2 block text-sm font-semibold">Plot name</span><input required data-testid="input-plot-name" value={name} onChange={(event) => setName(event.target.value)} placeholder="For example, East Garden" className="w-full rounded-xl border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-4 py-3 text-sm outline-none transition placeholder:text-[hsl(var(--muted-foreground))] focus:border-[hsl(var(--accent-foreground))] focus:ring-2 focus:ring-[hsl(var(--accent))]/30" /></label>
             <label className="mb-5 block"><span className="mb-2 block text-sm font-semibold">Description</span><textarea data-testid="input-plot-description" value={description} onChange={(event) => setDescription(event.target.value)} placeholder="What should a future reader understand?" rows={4} className="w-full resize-none rounded-xl border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-4 py-3 text-sm outline-none transition placeholder:text-[hsl(var(--muted-foreground))] focus:border-[hsl(var(--accent-foreground))] focus:ring-2 focus:ring-[hsl(var(--accent))]/30" /></label>
-            <label className="mb-7 block"><span className="mb-2 block text-sm font-semibold">Image URL <span className="font-normal text-[hsl(var(--muted-foreground))]">optional</span></span><input data-testid="input-plot-image" value={image} onChange={(event) => setImage(event.target.value)} placeholder="ipfs://… or a public image URL" className="w-full rounded-xl border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-4 py-3 text-sm outline-none transition placeholder:text-[hsl(var(--muted-foreground))] focus:border-[hsl(var(--accent-foreground))] focus:ring-2 focus:ring-[hsl(var(--accent))]/30" /></label>
-            <button data-testid="button-mint-plot" type="submit" disabled={status === 'Preparing transaction…'} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[hsl(var(--primary))] px-5 py-3.5 text-sm font-bold text-[hsl(var(--primary-foreground))] transition hover:-translate-y-0.5 hover:bg-[hsl(var(--foreground))] disabled:opacity-60">
-              {!address ? <><Sparkles className="h-4 w-4" />Connect to continue</> : !isSepolia ? 'Switch to Sepolia' : status === 'Preparing transaction…' || status === 'Transaction pending…' ? <><LoaderCircle className="h-4 w-4 animate-spin" />{status === 'Transaction pending…' ? 'Confirming' : 'Preparing'}</> : 'Mint plot NFT'}
+            <label className="mb-7 block"><span className="mb-2 block text-sm font-semibold">Plot image <span className="font-normal text-[hsl(var(--muted-foreground))]">optional · saved to Pinata IPFS</span></span><input data-testid="input-plot-image" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={(event) => { const file = event.target.files?.[0]; if (!file) return; if (file.size > 10 * 1024 * 1024) { setStatus('Images must be 10 MB or smaller.'); event.target.value = ''; return; } setImageFile(file); setImagePreview(URL.createObjectURL(file)); setStatus(''); }} className="w-full rounded-xl border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-4 py-3 text-sm outline-none transition file:mr-4 file:rounded-full file:border-0 file:bg-[hsl(var(--accent))] file:px-3 file:py-2 file:text-xs file:font-bold file:text-[hsl(var(--primary))] focus:border-[hsl(var(--accent-foreground))] focus:ring-2 focus:ring-[hsl(var(--accent))]/30" />{imageFile && <span className="mt-2 block text-xs text-[hsl(var(--muted-foreground))]">{imageFile.name} · ready for Pinata upload</span>}</label>
+            <button data-testid="button-mint-plot" type="submit" disabled={status === 'Uploading metadata to IPFS…' || status === 'Metadata saved. Preparing transaction…' || status === 'Preparing transaction…' || status === 'Transaction pending…'} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[hsl(var(--primary))] px-5 py-3.5 text-sm font-bold text-[hsl(var(--primary-foreground))] transition hover:-translate-y-0.5 hover:bg-[hsl(var(--foreground))] disabled:opacity-60">
+              {!address ? <><Sparkles className="h-4 w-4" />Connect to continue</> : !isSepolia ? 'Switch to Sepolia' : status.includes('Uploading') || status.includes('Preparing') || status.includes('pending') ? <><LoaderCircle className="h-4 w-4 animate-spin" />{status.includes('Uploading') ? 'Saving to IPFS' : status.includes('pending') ? 'Confirming' : 'Preparing'}</> : 'Mint plot NFT'}
             </button>
             {status && <p data-testid="status-mint" className={`mt-4 text-center text-xs leading-5 ${status.includes('could not') || status.includes('configured') || status.includes('Complete') || status.includes('positive') ? 'text-[hsl(var(--destructive))]' : 'text-[hsl(var(--muted-foreground))]'}`}>{status}</p>}
             {txHash && <a data-testid="link-mint-transaction" href={explorerTx(txHash)} target="_blank" rel="noreferrer" className="mt-3 flex items-center justify-center gap-2 text-xs font-semibold text-[hsl(var(--primary))] underline underline-offset-4">View transaction on Sepolia <ExternalLink className="h-3.5 w-3.5" /></a>}
+            {metadataUri && <a data-testid="link-ipfs-metadata" href={mediaUri(metadataUri)} target="_blank" rel="noreferrer" className="mt-3 flex items-center justify-center gap-2 text-xs font-semibold text-[hsl(var(--primary))] underline underline-offset-4">View metadata on Pinata IPFS <ExternalLink className="h-3.5 w-3.5" /></a>}
             {mintedId && <Link data-testid="link-minted-nft" href={`/nft/${mintedId}`} className="mt-3 flex items-center justify-center gap-2 text-xs font-semibold text-[hsl(var(--primary))] underline underline-offset-4">View NFT #{mintedId} <ArrowUpRight className="h-3.5 w-3.5" /></Link>}
           </form>
           <div className="lg:pt-3">
             <div className="mb-3 flex items-center justify-between"><p className="font-mono-ui text-[10px] uppercase tracking-[.18em] text-[hsl(var(--muted-foreground))]">Metadata preview</p><span className="rounded-full border border-[hsl(var(--border))] px-2.5 py-1 font-mono-ui text-[9px] text-[hsl(var(--muted-foreground))]">not yet minted</span></div>
             <div className="max-w-lg">
-              <MapTile title={preview.name || 'Untitled plot'} code="PREVIEW / DRAFT" tone="bg-[#d8dfc9]" image={image || undefined} />
+              <MapTile title={preview.name || 'Untitled plot'} code="PREVIEW / DRAFT" tone="bg-[#d8dfc9]" image={imagePreview || undefined} />
               <div className="mt-5 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
                 <p className="font-mono-ui text-[9px] uppercase tracking-[.16em] text-[hsl(var(--muted-foreground))]">Record note</p>
                 <p className="mt-3 text-sm leading-6 text-[hsl(var(--muted-foreground))]">{preview.description}</p>

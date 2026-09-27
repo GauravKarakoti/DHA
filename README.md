@@ -36,6 +36,7 @@ real-world property claims are intentionally out of scope.
 
 ```text
 artifacts/frontend/         React/Vite frontend
+artifacts/api-server/       Pinata upload API
 contracts/DHAPlotNFT.sol    ERC-721 source
 test/DHAPlotNFT.js          Hardhat contract tests
 scripts/deploy.js           Sepolia deployment script
@@ -58,6 +59,12 @@ the workflow-provided `PORT` and `BASE_PATH` values:
 PORT=21248 BASE_PATH=/ pnpm --filter @workspace/frontend run dev
 ```
 
+For the complete local flow, run the backend API as well:
+
+```bash
+PORT=5000 pnpm --filter @workspace/api-server run dev
+```
+
 The app is intentionally usable in an unconfigured state. Without a deployed
 contract address it shows archive studies labeled as not minted tokens and
 does not fabricate blockchain records.
@@ -73,11 +80,14 @@ NEXT_PUBLIC_CONTRACT_ADDRESS=
 NEXT_PUBLIC_CHAIN_ID=11155111
 VITE_DHA_CONTRACT_ADDRESS=
 VITE_SEPOLIA_CHAIN_ID=0xaa36a7
+VITE_PINATA_GATEWAY=https://gateway.pinata.cloud/ipfs
+PINATA_JWT=
 ```
 
 `PRIVATE_KEY` and `SEPOLIA_RPC_URL` are deployment-only secrets and must never
-be committed. The browser frontend only needs the public contract address and
-chain ID, exposed through the `VITE_` variables.
+be committed. `PINATA_JWT` is also server-only and must never be exposed as a
+`VITE_` variable. Add it through Replit Secrets. The browser frontend only
+needs the public contract address, chain ID, and optional public Pinata gateway.
 
 ## Hardhat Commands
 
@@ -108,9 +118,11 @@ Each mint:
 - associates a standard metadata URI with the token
 - emits `PlotMinted`
 
-Metadata is currently sent as a data URI from the browser for development. The
-mint API is structured around a URI so it can be replaced by IPFS-compatible
-storage later without changing the NFT contract.
+Before minting, the backend uploads the optional image and the complete JSON
+metadata document to Pinata's public IPFS network. The browser receives only
+the resulting `ipfs://` metadata URI; the Pinata JWT never reaches the client.
+The contract stores that URI unchanged, so the token remains portable across
+IPFS gateways.
 
 ## Frontend Web3 Architecture
 
@@ -120,11 +132,14 @@ The frontend uses the browser wallet provider directly:
 - wallet connection uses `eth_accounts` and `eth_requestAccounts`
 - network changes use `wallet_switchEthereumChain`
 - mints use `eth_sendTransaction`
-- metadata supports HTTP, IPFS, and JSON data URIs
+- metadata resolves HTTP, IPFS, and JSON data URIs
+- images are read through the configured public Pinata gateway
 
 The gallery reads `totalSupply`, then resolves token IDs from 1 through the
-current supply. This is deliberately simple for Phase 1; the `PlotMinted`
-event is the extension point for a future indexer/API.
+current supply. After a confirmed mint, returning to the marketplace reads the
+same live supply and displays the newly minted token. This is deliberately
+simple for Phase 1; the `PlotMinted` event is the extension point for a future
+indexer/API.
 
 ## Testing
 

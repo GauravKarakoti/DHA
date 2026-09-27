@@ -24,6 +24,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /pinata/plot-assets:
+    post:
+      operationId: uploadPlotAssets
+      tags: [pinata]
+      summary: Upload DHA plot image and metadata to Pinata IPFS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlotAssetsUploadRequest"
+      responses:
+        "201":
+          description: IPFS assets uploaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlotAssetsUploadResponse"
+        "400":
+          description: Invalid upload request
+        "502":
+          description: Pinata upload failed
+        "503":
+          description: Pinata is not configured
 components:
   schemas:
     HealthStatus:
@@ -33,4 +57,38 @@ components:
           type: string
       required:
         - status
+    PlotAssetsUploadRequest:
+      type: object
+      properties:
+        metadata:
+          type: object
+          additionalProperties: true
+        image:
+          type: object
+          properties:
+            dataUrl:
+              type: string
+            filename:
+              type: string
+            contentType:
+              type: string
+          required:
+            - dataUrl
+      required:
+        - metadata
+    PlotAssetsUploadResponse:
+      type: object
+      properties:
+        metadataUri:
+          type: string
+        imageUri:
+          type:
+            - string
+            - "null"
+        metadataCid:
+          type: string
+      required:
+        - metadataUri
+        - imageUri
+        - metadataCid
 
